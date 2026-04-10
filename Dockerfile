@@ -2,6 +2,7 @@
 # STAGE 1: builder
 ###################
 
+# syntax=docker/dockerfile:1.7
 FROM node:22-bullseye AS builder
 
 ARG MB_EDITION=oss
@@ -9,11 +10,15 @@ ARG VERSION
 
 WORKDIR /home/node
 
-RUN apt-get update && apt-get upgrade -y && apt-get install wget apt-transport-https gpg curl git -y \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get upgrade -y && apt-get install wget apt-transport-https gpg curl git python3 python3-pip -y \
     && wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor | tee /etc/apt/trusted.gpg.d/adoptium.gpg > /dev/null \
     && echo "deb https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main" | tee /etc/apt/sources.list.d/adoptium.list \
     && apt-get update \
     && apt install temurin-21-jdk -y \
+    && curl -LsSf https://astral.sh/uv/install.sh | sh \
+    && ln -sf /root/.local/bin/uv /usr/local/bin/uv \
     && curl -O https://download.clojure.org/install/linux-install-1.12.0.1488.sh \
     && chmod +x linux-install-1.12.0.1488.sh \
     && ./linux-install-1.12.0.1488.sh
@@ -24,9 +29,15 @@ COPY . .
 RUN git config --global --add safe.directory /home/node
 
 # install frontend dependencies
-RUN yarn --frozen-lockfile
+ENV CYPRESS_INSTALL_BINARY=0
+RUN --mount=type=cache,target=/usr/local/share/.cache/yarn,sharing=locked \
+    --mount=type=cache,target=/root/.cache/yarn,sharing=locked \
+    yarn --frozen-lockfile
 
-RUN INTERACTIVE=false CI=true MB_EDITION=$MB_EDITION bin/build.sh :version ${VERSION}
+RUN --mount=type=cache,target=/root/.m2,sharing=locked \
+    --mount=type=cache,target=/root/.gitlibs,sharing=locked \
+    --mount=type=cache,target=/root/.cache/uv,sharing=locked \
+    INTERACTIVE=false CI=true MB_EDITION=$MB_EDITION bin/build.sh :version ${VERSION}
 
 # ###################
 # # STAGE 2: runner
