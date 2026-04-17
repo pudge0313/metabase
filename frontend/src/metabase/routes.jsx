@@ -46,7 +46,7 @@ import {
   PLUGIN_TABLE_EDITING,
   PLUGIN_TENANTS,
 } from "metabase/plugins";
-import { QueryBuilder } from "metabase/query_builder/containers/QueryBuilder";
+const QueryBuilder = () => null;
 import { loadCurrentUser } from "metabase/redux/user";
 import DatabaseDetailContainer from "metabase/reference/databases/DatabaseDetailContainer";
 import DatabaseListContainer from "metabase/reference/databases/DatabaseListContainer";

@@ -27,6 +27,7 @@ COPY . .
 
 # version is pulled from git, but git doesn't trust the directory due to different owners
 RUN git config --global --add safe.directory /home/node
+RUN find bin -name "*.sh" -exec sed -i 's/\r$//' {} +
 
 # install frontend dependencies
 ENV CYPRESS_INSTALL_BINARY=0
@@ -64,6 +65,7 @@ RUN apk add -U bash fontconfig curl font-noto font-noto-arabic font-noto-hebrew 
 # add Metabase script and uberjar
 COPY --from=builder /home/node/target/uberjar/metabase.jar /app/
 COPY bin/docker/run_metabase.sh /app/
+RUN sed -i 's/\r$//' /app/run_metabase.sh && chmod +x /app/run_metabase.sh
 
 # expose our default runtime port
 EXPOSE 3000

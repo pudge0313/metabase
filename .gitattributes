@@ -5,3 +5,7 @@
 #
 # TODO (Bryan 12/12/25) -- reenable this when we can completely verify correctness
 # resources/migrations/*.yaml merge=yaml-migrations
+
+# Keep these frontend entry resources on LF so CSP hashes remain stable on Windows.
+resources/frontend_client/index_template.html text eol=lf
+resources/frontend_client/inline_js/*.js text eol=lf
